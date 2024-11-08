@@ -19,40 +19,29 @@ This task involves launching an EC2 instance using the AWS CLI, which allows for
 The steps include:
 
 1. *Retrieve the AMI*: Use the AWS Systems Manager Parameter Store to get the ID of the latest Amazon Linux 2 AMI.
-
 Command:
-bash
-Copy code
 AZ=`curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone`
 export AWS_DEFAULT_REGION=${AZ::-1}
 AMI=$(aws ssm get-parameters --names /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2 --query 'Parameters[0].[Value]' --output text)
 echo $AMI
-Retrieve the Subnet: Get the subnet ID for the public subnet using the describe-subnets command.
 
+2. *Retrieve the Subnet*: Get the subnet ID for the public subnet using the describe-subnets command.
 Command:
-bash
-Copy code
 SUBNET=$(aws ec2 describe-subnets --filters 'Name=tag:Name,Values=Public Subnet' --query Subnets[].SubnetId --output text)
 echo $SUBNET
-Retrieve the Security Group: Get the security group ID for the web security group that allows HTTP traffic.
 
+3. *Retrieve the Security Group*: Get the security group ID for the web security group that allows HTTP traffic.
 Command:
-bash
-Copy code
 SG=$(aws ec2 describe-security-groups --filters Name=group-name,Values=WebSecurityGroup --query SecurityGroups[].GroupId --output text)
 echo $SG
-Download the User Data Script: Download a script that installs and configures the Apache web server and web application.
 
+4. *Download the User Data Script*: Download a script that installs and configures the Apache web server and web application.
 Command:
-bash
-Copy code
 wget https://aws-tc-largeobjects.s3.us-west-2.amazonaws.com/CUR-TF-100-RSJAWS-3-23732/171-lab-JAWS-create-ec2/s3/UserData.txt
 cat UserData.txt
-Launch the Instance: Use the run-instances command to launch the instance with the specified AMI, subnet, security group, and user data script.
 
+5. *Launch the Instance*: Use the run-instances command to launch the instance with the specified AMI, subnet, security group, and user data script.
 Command:
-bash
-Copy code
 INSTANCE=$(
   aws ec2 run-instances \
   --image-id $AMI \
@@ -65,16 +54,14 @@ INSTANCE=$(
   --output text \
 )
 echo $INSTANCE
-Wait for the Instance to be Ready: Monitor the instance's status using the describe-instances command.
 
+6. *Wait for the Instance to be Ready*: Monitor the instance's status using the describe-instances command.
 Command:
-bash
-Copy code
 aws ec2 describe-instances --instance-ids $INSTANCE --query 'Reservations[].Instances[].State.Name' --output text
-Test the Web Server: Retrieve the public DNS name of the instance and test the web server by accessing it through a browser.
 
+7. *Test the Web Server*: Retrieve the public DNS name of the instance and test the web server by accessing it through a browser.
 Command:
-bash
-Copy code
 aws ec2 describe-instances --instance-ids $INSTANCE --query Reservations[].Instances[].PublicDnsName --output text
+
+
 The AWS CLI allows for repeatable and reliable automation, making it ideal for consistent deployments.
